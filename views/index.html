@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title> Link shortener</title>
+
+    <style>
+
+        html,body {
+            
+            margin: 0;
+            padding: 0;
+        
+        }
+        body {
+            background-color: #fcfcfc
+        }
+        header{
+
+            flex-direction: column;
+              display: flex;           
+            background: #303F9F;
+            box-shadow: 0 1px 5px 0 rgba(0,0,0,0.2);
+            color: white;
+            text-transform: uppercase;
+            width: 100%;
+            height: 30%;
+            padding: 5px 0  5px 0;
+            margin: 0;
+            text-align: center;
+            font-family: Verdana, Geneva, sans-serif;
+           justify-content: flex-end;
+
+        }
+        header input {
+
+            border-radius: 5px 0 0px 5px;
+            min-width: 50%;
+            
+            padding: 5px;
+            
+
+        }
+        header input:invalid {
+           outline-color: red;
+           
+          }
+
+
+         form {
+            display: flex;
+            justify-content: center;
+         }
+        header button {
+            
+            border-radius: 0 5px  5px 0;
+            margin: 0! important;
+           
+            
+             height:  5vh;
+             -webkit-appearance: none;
+            
+            
+        }
+    
+        ul {
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+           
+            list-style-type: none;
+        }
+
+        li {
+            width: 90vmin;
+            display: flex;
+            background-color: #fff;
+            padding: 10px 20px;
+            margin: 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        li div {
+            flex-grow: 5;
+        }
+        
+        #remove {
+
+            height: 6vmin;
+            width: 6vmin;
+            font-size: 3vmin;
+            border-radius: 50%;
+            position: fixed;
+            right: 5%;
+            bottom: 5%;
+        }
+    </style>
+</head>
+
+<body><header>
+        <h1> Link Shortner </h1>
+        <form action="" id="input">
+                <input id="link" type="url" placeholder="http://www.website.com"></input><button type="submit">shorten </button>
+      
+       </form>
+    </header>
+
+    <main>
+
+        <ul id="results">
+ 
+
+        </ul>
+        
+          <button id="remove" title="remove selected links" onclick="removeLinks()" > 🗑 </button>
+    </main>
+
+
+    <script>
+        
+      
+      const results = document.getElementById("results");
+
+        for(let i=0; i < localStorage.length; ++i){
+                  let shorturl = localStorage.key(i);
+                  
+
+                  if(shorturl[0] === "$"){
+
+                    originalurl = localStorage.getItem(shorturl);
+                    shorturl = shorturl.substr(1);
+                    AddLinkCard(shorturl,originalurl);
+
+
+                    }
+
+
+        }
+
+  
+
+
+        function selectElementContents(el) {
+            // source: https://stackoverflow.com/questions/6139107/programmatically-select-text-in-a-contenteditable-html-element/6150060#6150060
+                var range = document.createRange();
+                range.selectNodeContents(el);
+                 var sel = window.getSelection();
+                 sel.removeAllRanges();
+                 sel.addRange(range);
+        }
+        
+        const input = document.getElementById("input");
+        
+       input.addEventListener("submit",e =>{
+          e.preventDefault();
+          let link = document.querySelector('[href="'+document.getElementById("link").value+'"]');
+         if(link){
+              
+            
+            
+            let el = document.getElementById(link.dataset.shortid);
+           
+            el.parentElement.insertBefore(el,el.parentElement.firstChild);// Edge 
+
+
+         }else{
+
+
+
+
+         
+
+
+         const req =  new XMLHttpRequest();
+         req.onreadystatechange = function(event){
+                  if(this.readyState === XMLHttpRequest.DONE){
+                       
+                       const result = JSON.parse(this.response);
+                       if(this.status === 200){
+                              
+                             AddLinkCard(result.short_url,result.original_url);
+
+                            localStorage.setItem("$"+result.short_url, result.original_url);
+
+                           
+                            
+                       }else{
+                        document.getElementById("link").setCustomValidity(result.error);
+                        console.log(result.error);
+                           
+                       }
+
+                  }
+         }
+         req.open("GET",`new/${document.getElementById("link").value}`,true);
+         req.send(null);
+
+         
+        }
+       })
+
+
+       function toclip(id){
+                 
+                 let el = document.getElementById("short$"+id);
+                
+                 selectElementContents(el);
+                 
+                 document.execCommand("copy");
+       }
+
+       function removeLinks(){
+           let l = document.querySelectorAll(".selectLink:checked");
+           if(l.length){
+                   
+                   for( let x of l){
+                       localStorage.removeItem(x.value)
+                       document.getElementById(x.value).remove();
+                   }
+
+           }
+
+       }
+
+
+       function AddLinkCard(shorturl,originalurl){
+
+            let li = document.createElement("li");
+            li.id="$"+shorturl
+            li.innerHTML = `
+            <input title="select  link"  value="$${shorturl}" class="selectLink" type="checkbox" />
+            <div>
+                    <a title="short link" id="short$${shorturl}" href="${shorturl}"/>${window.location+shorturl} </a>
+                    <p> original Link: <a title="original url" data-shortid="$${shorturl}" href="${originalurl}">${originalurl}</a></p>
+
+
+            </div>
+          
+            <button title="copy to the clipboard" onclick=toclip("${shorturl}")> copy </button>`;
+
+            results.insertBefore(li,results.firstChild);
+        
+       }
+
+    </script>
+    
+</body>
+</html>
