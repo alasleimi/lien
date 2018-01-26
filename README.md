@@ -40,7 +40,7 @@ response:
 }
 ```
 
-short link: https://lien.gltich.me/C
+short link: https://lien.glitch.me/C
 
 
 
